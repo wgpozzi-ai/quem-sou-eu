@@ -1,0 +1,44 @@
+name: Gerar APK - Quem Sou Eu
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'main.yml'
+      - '.github/workflows/main.yml'
+      - 'quem_sou_eu_build_apk_na_nuvem.zip'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar arquivos do repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar ferramentas de extracao
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Extrair projeto Flutter
+        run: |
+          unzip -o quem_sou_eu_build_apk_na_nuvem.zip -d projeto
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Baixar dependencias
+        working-directory: projeto/quem_sou_eu_flutter
+        run: flutter pub get
+
+      - name: Compilar APK
+        working-directory: projeto/quem_sou_eu_flutter
+        run: flutter build apk --release
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: quem-sou-eu-apk
+          path: projeto/quem_sou_eu_flutter/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
